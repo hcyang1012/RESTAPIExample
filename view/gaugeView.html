@@ -1,0 +1,80 @@
+<html>
+	<head>
+		<script src="http://bernii.github.io/gauge.js/dist/gauge.min.js"></script>	
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	</head>
+	<body>
+	<script>
+
+	const slowdown_time = 10;
+	var time = 0;
+	var max = 0;
+	var gauge;
+	var data = null;
+	var timer;
+	function timeEvent(){
+		var position = data[time].motorPosition;
+		gauge.set(position);
+		time++;		
+		if(time < max){
+		}else{
+			clearInterval(timer);	
+		}
+		$('#time').text(time * slowdown_time / 1000 + "s / " + max * slowdown_time / 1000 + "s (" + slowdown_time + "times slower than real)");
+	}
+
+	function simulate(log){
+	    time = max = 0;
+		max = log.length;
+		data = log;
+		gauge.set(0);
+	    clearInterval(timer);  		
+		timer = setInterval(timeEvent, 1 * slowdown_time);
+	}
+	window.onload = function(){
+		var opts = {
+		  lines: 12, // The number of lines to draw
+		  angle: 0.0, // The length of each line
+		  lineWidth: 0.44, // The line thickness
+		  pointer: {
+		    length: 0.9, // The radius of the inner circle
+		    strokeWidth: 0.003, // The rotation offset
+		    color: '#000000' // Fill color
+		  },
+		  colorStart: '#6FADCF',   // Colors
+		  colorStop: '#8FC0DA',    // just experiment with them
+		  strokeColor: '#E0E0E0',   // to see which ones work best for you
+		  generateGradient: true
+		};
+		var target = document.getElementById('gaugeCanvas'); // your canvas element
+		gauge = new Gauge(target);
+		gauge.setOptions(opts); // create sexy gauge!
+		gauge.maxValue = 61440; // set max gauge value
+		gauge.animationSpeed = 1; // set animation speed (32 is default value)
+		gauge.set(0); // set actual value
+
+		$("#simulate").click(function(){  
+
+		    var url="http://127.0.0.1:8081/simulate/2";  		  
+		    $.ajax({      
+		        type:"GET",  
+		        url:url,            
+		        success:function(args){   
+		        	
+		            simulate(JSON.parse(args).simulate); 
+		        },    
+		        error:function(e){  
+		            alert(e.responseText);  
+		        }  
+		    });  
+		      
+		});  		
+	}
+
+	</script>
+
+	<canvas id="gaugeCanvas"></canvas>
+	<button id="simulate">simulate</button>
+	<label id="time"></label>
+	</body>
+</html>
